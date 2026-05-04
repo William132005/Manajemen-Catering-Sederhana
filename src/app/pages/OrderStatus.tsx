@@ -1,188 +1,137 @@
 import { useState } from "react";
-import { Clock, Package, CheckCircle, Archive, Search } from "lucide-react";
+import { Clock, Package, CheckCircle, XCircle, FileText, Search, Shield, Lock } from "lucide-react";
 
-interface Order {
-  id: string;
-  customerName: string;
-  service: string;
-  weight: number;
-  dateIn: string;
-  dateOut: string;
-  status: string;
-  totalCost: number;
-}
-
-const allOrders: Order[] = [
-  { id: "ORD-001", customerName: "Budi Santoso", service: "Cuci Setrika", weight: 3.5, dateIn: "2026-04-27", dateOut: "2026-04-29", status: "Diproses", totalCost: 35000 },
-  { id: "ORD-002", customerName: "Siti Nurhaliza", service: "Cuci Kering", weight: 2.0, dateIn: "2026-04-27", dateOut: "2026-04-28", status: "Menunggu", totalCost: 24000 },
-  { id: "ORD-003", customerName: "Ahmad Wijaya", service: "Setrika Saja", weight: 4.0, dateIn: "2026-04-26", dateOut: "2026-04-27", status: "Selesai", totalCost: 20000 },
-  { id: "ORD-004", customerName: "Rina Marlina", service: "Cuci Setrika", weight: 5.5, dateIn: "2026-04-26", dateOut: "2026-04-28", status: "Diproses", totalCost: 55000 },
-  { id: "ORD-005", customerName: "Dedi Prasetyo", service: "Cuci Express", weight: 1.5, dateIn: "2026-04-25", dateOut: "2026-04-26", status: "Sudah Diambil", totalCost: 22500 },
-  { id: "ORD-006", customerName: "Putri Ayu", service: "Cuci Setrika", weight: 3.0, dateIn: "2026-04-27", dateOut: "2026-04-29", status: "Menunggu", totalCost: 30000 },
-  { id: "ORD-007", customerName: "Bambang Hermawan", service: "Setrika Saja", weight: 2.5, dateIn: "2026-04-26", dateOut: "2026-04-27", status: "Selesai", totalCost: 12500 },
-  { id: "ORD-008", customerName: "Indah Permata", service: "Cuci Kering", weight: 4.5, dateIn: "2026-04-25", dateOut: "2026-04-27", status: "Sudah Diambil", totalCost: 54000 },
+const all = [
+  { id: "CAT-001", customer: "Budi Santoso", event: "Pernikahan Putri", date: "2026-05-10", pkg: "Platinum", guests: 300, status: "Dikonfirmasi", total: 36000000 },
+  { id: "CAT-002", customer: "Siti Rahma", event: "Ulang Tahun ke-50", date: "2026-05-08", pkg: "Gold", guests: 150, status: "Diproses", total: 11250000 },
+  { id: "CAT-003", customer: "PT Maju Jaya", event: "Seminar Tahunan", date: "2026-05-06", pkg: "Silver", guests: 200, status: "Selesai", total: 9000000 },
+  { id: "CAT-004", customer: "Ahmad Fauzi", event: "Arisan Keluarga", date: "2026-05-05", pkg: "Silver", guests: 80, status: "Dikonfirmasi", total: 3600000 },
+  { id: "CAT-005", customer: "CV Barokah", event: "Gathering Karyawan", date: "2026-05-04", pkg: "Gold", guests: 120, status: "Selesai", total: 9000000 },
+  { id: "CAT-006", customer: "Rina Amelia", event: "Pesta Ulang Tahun", date: "2026-05-12", pkg: "Silver", guests: 60, status: "Draft", total: 2700000 },
+  { id: "CAT-007", customer: "Hendra Gunawan", event: "Rapat Direksi", date: "2026-05-03", pkg: "Gold", guests: 40, status: "Selesai", total: 3000000 },
+  { id: "CAT-008", customer: "Dewi Susanti", event: "Wisuda Anak", date: "2026-05-15", pkg: "Platinum", guests: 100, status: "Diproses", total: 12000000 },
 ];
 
-const statusCategories = [
-  { name: "Menunggu", icon: Clock, color: "yellow", bgColor: "bg-yellow-50", borderColor: "border-yellow-200", textColor: "text-yellow-700" },
-  { name: "Diproses", icon: Package, color: "blue", bgColor: "bg-blue-50", borderColor: "border-blue-200", textColor: "text-blue-700" },
-  { name: "Selesai", icon: CheckCircle, color: "green", bgColor: "bg-green-50", borderColor: "border-green-200", textColor: "text-green-700" },
-  { name: "Sudah Diambil", icon: Archive, color: "gray", bgColor: "bg-gray-50", borderColor: "border-gray-200", textColor: "text-gray-700" },
+const categories = [
+  { name: "Draft", icon: FileText, bg: "#f1f5f9", color: "#475569", border: "#e2e8f0" },
+  { name: "Dikonfirmasi", icon: Clock, bg: "#dbeafe", color: "#1d4ed8", border: "#bfdbfe" },
+  { name: "Diproses", icon: Package, bg: "#fef3c7", color: "#d97706", border: "#fed7aa" },
+  { name: "Selesai", icon: CheckCircle, bg: "#d1fae5", color: "#059669", border: "#86efac" },
+  { name: "Dibatalkan", icon: XCircle, bg: "#fee2e2", color: "#dc2626", border: "#fca5a5" },
 ];
+
+const fmtRp = (n: number) => `Rp ${(n / 1000000).toFixed(1)}jt`;
 
 export function OrderStatus() {
-  const [selectedStatus, setSelectedStatus] = useState<string>("Semua");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [active, setActive] = useState("Semua");
+  const [search, setSearch] = useState("");
 
-  const filteredOrders = allOrders.filter(order => {
-    const matchesStatus = selectedStatus === "Semua" || order.status === selectedStatus;
-    const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.id.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
+  const filtered = all.filter(o => {
+    const matchStatus = active === "Semua" || o.status === active;
+    const matchSearch = o.customer.toLowerCase().includes(search.toLowerCase()) || o.id.toLowerCase().includes(search.toLowerCase());
+    return matchStatus && matchSearch;
   });
 
-  const getStatusStats = (status: string) => {
-    return allOrders.filter(order => order.status === status).length;
-  };
+  const count = (s: string) => all.filter(o => o.status === s).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-800">Status Pesanan</h2>
-        <p className="text-gray-500 mt-1">Pantau status order laundry secara real-time</p>
+        <div className="flex items-center gap-2.5 mb-0.5">
+          <h2 className="text-xl font-bold text-gray-800">Status Pesanan</h2>
+          <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#d1fae5", color: "#065f46" }}>
+            <Shield size={9} />Real-time
+          </span>
+        </div>
+        <p className="text-sm text-gray-500">Pantau status setiap pesanan catering secara real-time</p>
       </div>
 
-      {/* Status Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        {statusCategories.map((status) => {
-          const Icon = status.icon;
-          const count = getStatusStats(status.name);
-
+      {/* Status summary cards */}
+      <div className="grid grid-cols-5 gap-3">
+        {categories.map(cat => {
+          const Icon = cat.icon;
+          const isActive = active === cat.name;
+          const c = count(cat.name);
           return (
-            <button
-              key={status.name}
-              onClick={() => setSelectedStatus(status.name)}
-              className={`p-6 rounded-xl border-2 transition-all text-left ${
-                selectedStatus === status.name
-                  ? `${status.bgColor} ${status.borderColor} shadow-md`
-                  : "bg-white border-gray-200 hover:shadow-md"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <Icon size={28} className={selectedStatus === status.name ? status.textColor : "text-gray-400"} />
-                <span className={`text-3xl font-bold ${selectedStatus === status.name ? status.textColor : "text-gray-700"}`}>
-                  {count}
-                </span>
+            <button key={cat.name} onClick={() => setActive(cat.name)} className="p-4 rounded-2xl text-left transition-all" style={{
+              background: isActive ? cat.bg : "white",
+              border: `2px solid ${isActive ? cat.border : "#e2e8f0"}`,
+              boxShadow: isActive ? "0 2px 8px rgba(0,0,0,0.06)" : "none"
+            }}>
+              <div className="flex items-center justify-between mb-2">
+                <Icon size={18} style={{ color: isActive ? cat.color : "#94a3b8" }} />
+                <span className="text-2xl font-bold" style={{ color: isActive ? cat.color : "#475569" }}>{c}</span>
               </div>
-              <p className={`font-medium ${selectedStatus === status.name ? status.textColor : "text-gray-600"}`}>
-                {status.name}
-              </p>
+              <p className="text-xs font-semibold" style={{ color: isActive ? cat.color : "#64748b" }}>{cat.name}</p>
             </button>
           );
         })}
       </div>
 
-      {/* Filter Buttons */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => setSelectedStatus("Semua")}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            selectedStatus === "Semua"
-              ? "bg-blue-600 text-white shadow-md"
-              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-          }`}
-        >
-          Semua ({allOrders.length})
+      {/* Filter bar */}
+      <div className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm" style={{ border: "1px solid #e2e8f0" }}>
+        <div className="relative flex-1">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input type="text" placeholder="Cari pesanan atau pelanggan..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm outline-none" style={{ borderColor: "#e2e8f0" }} />
+        </div>
+        <button onClick={() => setActive("Semua")} className="px-4 py-2 rounded-xl text-sm font-semibold transition-all" style={{ background: active === "Semua" ? "#2563eb" : "#f1f5f9", color: active === "Semua" ? "white" : "#475569" }}>
+          Semua ({all.length})
         </button>
-        {statusCategories.map((status) => (
-          <button
-            key={status.name}
-            onClick={() => setSelectedStatus(status.name)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              selectedStatus === status.name
-                ? `${status.bgColor} ${status.textColor} border-2 ${status.borderColor}`
-                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-            }`}
-          >
-            {status.name} ({getStatusStats(status.name)})
+        {categories.slice(1).map(cat => (
+          <button key={cat.name} onClick={() => setActive(cat.name)} className="px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap" style={{
+            background: active === cat.name ? cat.bg : "#f8fafc",
+            color: active === cat.name ? cat.color : "#94a3b8",
+            border: `1px solid ${active === cat.name ? cat.border : "#e2e8f0"}`
+          }}>
+            {cat.name} ({count(cat.name)})
           </button>
         ))}
       </div>
 
-      {/* Search */}
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Cari order berdasarkan ID atau nama pelanggan..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Orders Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredOrders.map((order) => {
-          const statusInfo = statusCategories.find(s => s.name === order.status);
-          const Icon = statusInfo?.icon || Clock;
-
+      {/* Cards Grid */}
+      <div className="grid grid-cols-3 gap-4">
+        {filtered.map(o => {
+          const cat = categories.find(c => c.name === o.status) ?? categories[0];
+          const Icon = cat.icon;
           return (
-            <div
-              key={order.id}
-              className={`bg-white rounded-xl shadow-sm border-2 ${statusInfo?.borderColor} p-6 hover:shadow-md transition-all`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-bold text-gray-900">{order.id}</span>
-                <div className={`p-2 rounded-lg ${statusInfo?.bgColor}`}>
-                  <Icon size={20} className={statusInfo?.textColor} />
+            <div key={o.id} className="bg-white rounded-2xl p-5 hover:shadow-md transition-all" style={{ border: `2px solid ${cat.border}` }}>
+              <div className="flex items-start justify-between mb-3">
+                <span className="text-xs font-mono font-bold text-gray-500">{o.id}</span>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: cat.bg }}>
+                  <Icon size={13} style={{ color: cat.color }} />
+                  <span className="text-xs font-semibold" style={{ color: cat.color }}>{o.status}</span>
                 </div>
               </div>
-
-              <h3 className="font-semibold text-gray-800 mb-2">{order.customerName}</h3>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Layanan:</span>
-                  <span className="text-gray-700 font-medium">{order.service}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Berat:</span>
-                  <span className="text-gray-700 font-medium">{order.weight} kg</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Masuk:</span>
-                  <span className="text-gray-700 font-medium">{new Date(order.dateIn).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Selesai:</span>
-                  <span className="text-gray-700 font-medium">{new Date(order.dateOut).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
-                </div>
+              <h3 className="font-bold text-gray-800 mb-0.5">{o.event}</h3>
+              <p className="text-sm text-gray-500 mb-3 flex items-center gap-1.5">
+                <Lock size={11} className="text-gray-400" />
+                {o.customer}
+              </p>
+              <div className="space-y-1.5 mb-4">
+                {[["Paket", `Paket ${o.pkg}`], ["Tanggal", new Date(o.date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })], ["Jumlah Tamu", `${o.guests} orang`]].map(([k, v]) => (
+                  <div key={k} className="flex justify-between text-sm">
+                    <span className="text-gray-400">{k}:</span>
+                    <span className="font-medium text-gray-700">{v}</span>
+                  </div>
+                ))}
               </div>
-
-              <div className={`pt-4 border-t ${statusInfo?.borderColor} flex items-center justify-between`}>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo?.bgColor} ${statusInfo?.textColor}`}>
-                  {order.status}
+              <div className="flex items-center justify-between pt-3" style={{ borderTop: `1px solid ${cat.border}` }}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#d1fae5", color: "#065f46" }}>
+                  <Shield size={8} />ENCRYPTED
                 </span>
-                <span className="font-bold text-gray-900">
-                  Rp {order.totalCost.toLocaleString('id-ID')}
-                </span>
+                <span className="font-bold text-gray-800">{fmtRp(o.total)}</span>
               </div>
             </div>
           );
         })}
       </div>
-
-      {filteredOrders.length === 0 && (
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Search size={32} className="text-gray-400" />
+      {filtered.length === 0 && (
+        <div className="bg-white rounded-2xl p-14 text-center" style={{ border: "1px solid #e2e8f0" }}>
+          <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: "#f1f5f9" }}>
+            <Search size={22} className="text-gray-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Tidak ada order</h3>
-          <p className="text-gray-500">Tidak ditemukan order dengan status "{selectedStatus}"</p>
+          <p className="text-gray-500 text-sm">Tidak ada pesanan ditemukan</p>
         </div>
       )}
     </div>

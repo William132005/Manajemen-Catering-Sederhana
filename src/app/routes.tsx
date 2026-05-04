@@ -7,13 +7,11 @@ import { OrderStatus } from "./pages/OrderStatus";
 import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
 import { SecuritySettings } from "./pages/SecuritySettings";
+import { DemoEncryption } from "./pages/DemoEncryption";
 import { MainLayout } from "./components/MainLayout";
 
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    Component: Login,
-  },
+  { path: "/", Component: Login },
   {
     path: "/",
     Component: MainLayout,
@@ -23,8 +21,9 @@ export const router = createBrowserRouter([
       { path: "orders", Component: Orders },
       { path: "status", Component: OrderStatus },
       { path: "reports", Component: Reports },
-      { path: "settings", Component: Settings },
       { path: "security", Component: SecuritySettings },
+      { path: "demo-enkripsi", Component: DemoEncryption },
+      { path: "settings", Component: Settings },
     ],
   },
 ]);

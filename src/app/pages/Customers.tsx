@@ -4,16 +4,16 @@ import * as Dialog from "@radix-ui/react-dialog";
 
 interface Customer {
   id: string; name: string; phone: string; email: string; address: string;
-  totalOrders: number; joinDate: string;
+  totalOrders: number; joinDate: string; keyId: string; encAt: string;
 }
 
 const init: Customer[] = [
-  { id: "PLG-001", name: "Budi Santoso", phone: "0812-3456-7890", email: "budi@email.com", address: "Jl. Merdeka No. 12, Jakarta Selatan", totalOrders: 3, joinDate: "2025-08-10" },
-  { id: "PLG-002", name: "Siti Rahma", phone: "0813-9876-5432", email: "siti@gmail.com", address: "Jl. Sudirman No. 45, Jakarta Pusat", totalOrders: 2, joinDate: "2025-10-22" },
-  { id: "PLG-003", name: "PT Maju Jaya", phone: "0215-5544-3322", email: "admin@majujaya.co.id", address: "Gedung Menara, Jl. Gatot Subroto Lt.5", totalOrders: 7, joinDate: "2025-03-15" },
-  { id: "PLG-004", name: "Ahmad Fauzi", phone: "0856-1122-3344", email: "ahmad.f@email.com", address: "Jl. Ahmad Yani No. 78, Bandung", totalOrders: 1, joinDate: "2026-01-05" },
-  { id: "PLG-005", name: "CV Barokah", phone: "0217-7788-9900", email: "barokah@cv.com", address: "Jl. Raya Bogor Km. 23, Depok", totalOrders: 5, joinDate: "2025-06-30" },
-  { id: "PLG-006", name: "Rina Amelia", phone: "0878-3344-5566", email: "rina.a@mail.com", address: "Jl. Pahlawan No. 5, Bekasi", totalOrders: 2, joinDate: "2026-02-14" },
+  { id: "PLG-001", name: "Budi Santoso", phone: "0812-3456-7890", email: "budi@email.com", address: "Jl. Merdeka No. 12, Jakarta Selatan", totalOrders: 3, joinDate: "2025-08-10", keyId: "KEY-C01", encAt: "2025-08-10 09:15" },
+  { id: "PLG-002", name: "Siti Rahma", phone: "0813-9876-5432", email: "siti@gmail.com", address: "Jl. Sudirman No. 45, Jakarta Pusat", totalOrders: 2, joinDate: "2025-10-22", keyId: "KEY-C02", encAt: "2025-10-22 14:30" },
+  { id: "PLG-003", name: "PT Maju Jaya", phone: "0215-5544-3322", email: "admin@majujaya.co.id", address: "Gedung Menara, Jl. Gatot Subroto Lt.5", totalOrders: 7, joinDate: "2025-03-15", keyId: "KEY-C03", encAt: "2025-03-15 08:00" },
+  { id: "PLG-004", name: "Ahmad Fauzi", phone: "0856-1122-3344", email: "ahmad.f@email.com", address: "Jl. Ahmad Yani No. 78, Bandung", totalOrders: 1, joinDate: "2026-01-05", keyId: "KEY-C04", encAt: "2026-01-05 11:22" },
+  { id: "PLG-005", name: "CV Barokah", phone: "0217-7788-9900", email: "barokah@cv.com", address: "Jl. Raya Bogor Km. 23, Depok", totalOrders: 5, joinDate: "2025-06-30", keyId: "KEY-C05", encAt: "2025-06-30 16:05" },
+  { id: "PLG-006", name: "Rina Amelia", phone: "0878-3344-5566", email: "rina.a@mail.com", address: "Jl. Pahlawan No. 5, Bekasi", totalOrders: 2, joinDate: "2026-02-14", keyId: "KEY-C06", encAt: "2026-02-14 10:45" },
 ];
 
 const ENC = () => (
@@ -47,7 +47,10 @@ export function Customers() {
   );
 
   const handleAdd = () => {
-    const n: Customer = { id: `PLG-${String(customers.length + 1).padStart(3, "0")}`, ...form, totalOrders: 0, joinDate: new Date().toISOString().split("T")[0] };
+    const now = new Date();
+    const encAt = now.toISOString().split("T")[0] + " " + now.toTimeString().substring(0, 5);
+    const keyId = `KEY-C${String(customers.length + 1).padStart(2, "0")}`;
+    const n: Customer = { id: `PLG-${String(customers.length + 1).padStart(3, "0")}`, ...form, totalOrders: 0, joinDate: now.toISOString().split("T")[0], keyId, encAt };
     setCustomers([...customers, n]);
     setForm({ name: "", phone: "", email: "", address: "" });
     setIsAddOpen(false);
@@ -126,7 +129,7 @@ export function Customers() {
         <table className="w-full">
           <thead style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
             <tr>
-              {["ID Pelanggan", "Nama", "No. Telepon", "Email", "Alamat", "Total Order", "Status Enkripsi", "Aksi"].map(h => (
+              {["ID Pelanggan", "Nama", "No. Telepon", "Email", "Alamat", "Total Order", "Status Enkripsi", "Key ID", "Waktu Enkripsi", "Aksi"].map(h => (
                 <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold uppercase" style={{ color: "#94a3b8" }}>{h}</th>
               ))}
             </tr>
@@ -141,6 +144,8 @@ export function Customers() {
                 <td className="px-5 py-3.5 text-sm text-gray-600 max-w-[200px] truncate">{c.address}</td>
                 <td className="px-5 py-3.5 text-sm text-center font-semibold text-gray-700">{c.totalOrders}</td>
                 <td className="px-5 py-3.5"><ENC /></td>
+                <td className="px-5 py-3.5 text-xs font-mono" style={{ color: "#6d28d9" }}>{c.keyId}</td>
+                <td className="px-5 py-3.5 text-xs text-gray-400 whitespace-nowrap">{c.encAt}</td>
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-1">
                     <button onClick={() => { setSelected(c); setIsDetailOpen(true); }} className="p-1.5 rounded-lg transition-all hover:bg-blue-50 text-blue-600" title="Detail"><Eye size={15} /></button>
